@@ -1,7 +1,7 @@
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-600.css';
 import './style.css';
-import { initScene, type ModelKey } from './scene';
+import type { AsciiScene, ModelKey } from './scene';
 import { initLab } from './lab';
 import { initTerminal } from './terminal';
 
@@ -10,22 +10,33 @@ document.documentElement.classList.add('js');
 
 // ASCII hero
 const status = document.querySelector<HTMLElement>('#status')!;
-const ascii = initScene(document.querySelector<HTMLCanvasElement>('#ascii')!, (text) => (status.textContent = text));
-if (!ascii) {
+let ascii: AsciiScene | null = null;
+let zone: 'hero' | 'work' | 'off' = 'hero';
+let model: ModelKey = 'monogram';
+const staticMode = () => {
   document.body.classList.add('no-webgl');
-  status.textContent = 'webgl unavailable · static mode';
-}
+  status.textContent = 'static mode';
+};
+// The optional 3D bundle must not hold up the links, terminal, or content.
+// A failed graphics import/initialization leaves a usable static page.
+void import('./scene').then(({ initScene }) => {
+  ascii = initScene(document.querySelector<HTMLCanvasElement>('#ascii')!, (text) => (status.textContent = text));
+  if (!ascii) return staticMode();
+  ascii.setActive(zone !== 'off');
+  if (zone !== 'off') ascii.setSide(zone);
+  ascii.swap(model);
+}).catch(staticMode);
 
 // The canvas only runs while the hero or the work list is on screen.
 const zones = new Map<string, boolean>();
 const zoneObserver = new IntersectionObserver(
   (entries) => {
     for (const entry of entries) zones.set(entry.target.id, entry.isIntersecting);
-    const zone = zones.get('top') ? 'hero' : zones.get('work') ? 'work' : 'off';
+    zone = zones.get('top') ? 'hero' : zones.get('work') ? 'work' : 'off';
     document.body.dataset.zone = zone;
     ascii?.setActive(zone !== 'off');
     if (zone !== 'off') ascii?.setSide(zone);
-    if (zone === 'hero') ascii?.swap('monogram');
+    if (zone === 'hero') { model = 'monogram'; ascii?.swap(model); }
   },
   { rootMargin: '-35% 0px -35% 0px' },
 );
@@ -33,7 +44,7 @@ for (const id of ['top', 'work']) zoneObserver.observe(document.getElementById(i
 
 // Work rows swap the model in the ASCII stage.
 document.querySelectorAll<HTMLAnchorElement>('[data-model]').forEach((row) => {
-  const show = () => ascii?.swap(row.dataset.model as ModelKey);
+  const show = () => { model = row.dataset.model as ModelKey; ascii?.swap(model); };
   row.addEventListener('pointerenter', show);
   row.addEventListener('focus', show);
 });
@@ -58,7 +69,9 @@ const typed = document.querySelector<HTMLElement>('#typed')!;
 const skip = document.querySelector<HTMLButtonElement>('#skip')!;
 const copy = typed.textContent!.replace(/\s+/g, ' ').trim();
 if (!reduced) {
-  typed.setAttribute('aria-label', copy);
+  const accessibleCopy = document.createElement('span');
+  accessibleCopy.className = 'visually-hidden';
+  accessibleCopy.textContent = copy;
   const done = document.createElement('span');
   const caret = document.createElement('span');
   const rest = document.createElement('span');
@@ -66,7 +79,7 @@ if (!reduced) {
   rest.className = 'rest';
   rest.textContent = copy;
   for (const span of [done, caret, rest]) span.setAttribute('aria-hidden', 'true');
-  typed.replaceChildren(done, caret, rest);
+  typed.replaceChildren(accessibleCopy, done, caret, rest);
 
   let timer = 0;
   let count = 0;
