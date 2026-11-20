@@ -155,7 +155,11 @@ const sampler: Sketch = (_t, s) => {
 const SKETCHES: Record<string, Sketch> = { torus, calibration, kelly, descent, rain, sampler };
 
 export function initLab() {
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const controls = document.getElementById('lab-controls')!;
+  const playback = document.querySelector<HTMLButtonElement>('#lab-playback')!;
+  const step = document.querySelector<HTMLButtonElement>('#lab-step')!;
+  let paused = motion.matches;
   const panels = [...document.querySelectorAll<HTMLElement>('[data-sketch]')].map((el) => ({
     el,
     sketch: SKETCHES[el.dataset.sketch!],
@@ -168,26 +172,38 @@ export function initLab() {
       .join('\n');
   };
 
-  if (reduced) {
-    // Final states: advance each sketch a little so the still frame has something in it.
-    for (const panel of panels) for (let i = 0; i < 60; i++) paint(panel, 2 + i / 12);
-    return;
-  }
-
-  panels.forEach((panel) => paint(panel, 0));
+  let elapsed = 0;
+  const advance = (all: boolean) => {
+    elapsed += 0.08;
+    for (const panel of panels) if (all || panel.visible) paint(panel, elapsed);
+  };
+  // Build a representative still for reduced-motion visitors.
+  if (paused) for (let i = 0; i < 60; i++) advance(true);
+  else panels.forEach((panel) => paint(panel, 0));
   let raf = 0;
   let last = 0;
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
     if (now - last < 80) return;
     last = now;
-    for (const panel of panels) if (panel.visible) paint(panel, now / 1000);
+    advance(false);
   };
   const sync = () => {
     cancelAnimationFrame(raf);
     raf = 0;
-    if (!document.hidden && panels.some((p) => p.visible)) raf = requestAnimationFrame(tick);
+    if (!paused && !document.hidden && panels.some((p) => p.visible)) raf = requestAnimationFrame(tick);
   };
+  const setPaused = (value: boolean) => {
+    paused = value;
+    playback.textContent = paused ? 'Play sketches' : 'Pause sketches';
+    step.disabled = !paused;
+    sync();
+  };
+  playback.addEventListener('click', () => setPaused(!paused));
+  step.addEventListener('click', () => advance(true));
+  motion.addEventListener('change', () => { if (motion.matches) setPaused(true); });
+  setPaused(paused);
+  controls.hidden = false;
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       const panel = panels.find((p) => p.el === entry.target);

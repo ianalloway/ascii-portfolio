@@ -103,6 +103,10 @@
             Six text-mode sketches, running live. The full lab has 98 interactive experiments — a live LLM-judge audit,
             Kelly and closing-line tools, samplers and optimisers you can watch converge.
           </p>
+          <div class="lab-controls" id="lab-controls" role="group" aria-label="Sketch playback" hidden>
+            <button type="button" id="lab-playback">Pause sketches</button>
+            <button type="button" id="lab-step" disabled>Next frame</button>
+          </div>
           <div class="lab-grid">
             <figure class="panel reveal" style="--tone: var(--text)">
               <pre data-sketch="torus" aria-hidden="true"></pre>
