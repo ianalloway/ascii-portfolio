@@ -355,6 +355,15 @@ h2 {
   border-top: 1px solid var(--line);
 }
 
+.lab-controls:not([hidden]) {
+  display: flex;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.lab-controls button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 .lab-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -416,6 +425,7 @@ h2 {
 }
 
 .skip,
+.lab-controls button,
 .term-buttons button {
   font: inherit;
   font-size: 12px;
@@ -432,6 +442,7 @@ h2 {
 }
 
 .skip:hover,
+.lab-controls button:enabled:hover,
 .term-buttons button:hover {
   color: var(--accent);
   border-color: var(--accent);

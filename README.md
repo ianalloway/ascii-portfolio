@@ -26,6 +26,10 @@ complete screen-reader copy while its visual typing animation runs.
 Use `projects` in the contact terminal to list the work links. Add keywords
 such as `projects model evaluation` to search project names, categories and descriptions.
 
+Use **Pause sketches** in the Lab to freeze the ASCII experiments. **Next frame**
+advances them once, and **Play sketches** resumes animation. Reduced-motion
+visitors start with a still frame and can choose either control.
+
 Before publishing, check the page at desktop and phone widths, tab through the
 work links, try the contact commands, and enable reduced motion in your browser.
 `npm run build` produces the static site in `dist/`.
