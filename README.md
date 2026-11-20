@@ -23,6 +23,9 @@ WebGL initialization fails, the page keeps its static background and the work
 links, contact terminal, and navigation still work. The about paragraph has a
 complete screen-reader copy while its visual typing animation runs.
 
+Use `projects` in the contact terminal to list the work links. Add keywords
+such as `projects model evaluation` to search project names, categories and descriptions.
+
 Before publishing, check the page at desktop and phone widths, tab through the
 work links, try the contact commands, and enable reduced motion in your browser.
 `npm run build` produces the static site in `dist/`.

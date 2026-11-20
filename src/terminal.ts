@@ -20,6 +20,7 @@ const HELP: [string, string][] = [
   ['cv', 'open the résumé (pdf)'],
   ['github', 'source for everything here'],
   ['linkedin', 'full experience'],
+  ['projects', 'list work or search it, e.g. projects kelly'],
   ['notes', 'recent field notes'],
   ['substack', 'get the next field note'],
   ['x', 'short-form'],
@@ -53,7 +54,22 @@ export function initTerminal() {
     const command = raw.trim().toLowerCase();
     if (!command) return;
     line(`ian@alloway:~$ ${command}`);
-    if (command === 'clear') {
+    const [verb, ...terms] = command.split(/\s+/);
+    if (verb === 'projects') {
+      const projects = document.querySelectorAll<HTMLAnchorElement>('#work [data-model]');
+      let matches = 0;
+      for (const project of projects) {
+        const name = project.querySelector('.name')!.textContent!;
+        const category = project.querySelector('.type')!.textContent!;
+        const description = project.querySelector('.desc')!.textContent!;
+        const searchable = [name, category, description].join(' ').toLowerCase();
+        if (terms.every((term) => searchable.includes(term))) {
+          line('  ', anchor(name, project.href), ' — ', category);
+          matches++;
+        }
+      }
+      if (!matches) line('  no matching projects. Type projects to see all work.');
+    } else if (command === 'clear') {
       output.replaceChildren();
     } else if (command === 'help') {
       for (const [name, description] of HELP) line(`  ${name.padEnd(10)}${description}`);
